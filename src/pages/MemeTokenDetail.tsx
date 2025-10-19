@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, ChevronDown, TrendingUp, Wallet } from 'lucide-react';
+import { Copy, TrendingUp, Wallet } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface MemeToken {
@@ -18,19 +18,19 @@ interface MemeToken {
   created_at: string;
 }
 
-interface Signal {
-  signal_type: string;
-  initiator_name: string;
-  initiator_avatar: string;
-  price: number;
-  amount: number;
-  signal_time: string;
-  relative_time_minutes: number;
-}
+// interface Signal {
+//   signal_type: string;
+//   initiator_name: string;
+//   initiator_avatar: string;
+//   price: number;
+//   amount: number;
+//   signal_time: string;
+//   relative_time_minutes: number;
+// }
 
 export default function MemeTokenDetail() {
   const [token, setToken] = useState<MemeToken | null>(null);
-  const [signals, setSignals] = useState<Signal[]>([]);
+  // const [signals] = useState<Signal[]>([]); // 移除未使用的signals变量
   const [selectedTab, setSelectedTab] = useState<'signals' | 'holdings'>('signals');
   const [tradeTab, setTradeTab] = useState<'buy' | 'sell'>('buy');
   const [amount, setAmount] = useState('');

@@ -17,13 +17,13 @@ interface Campaign {
 export default function GroupOwnerDashboard() {
   const [activeTab, setActiveTab] = useState<'commission' | 'campaigns' | 'bot'>('campaigns');
   const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [selectedCommunity, setSelectedCommunity] = useState('币圈猎狗群');
+  const [selectedCommunity] = useState('币圈猎狗群'); // 移除未使用的setter
   const [isWalletBound, setIsWalletBound] = useState(false);
   const [liveCampaigns, setLiveCampaigns] = useState<Campaign[]>([]);
   const [pastCampaigns, setPastCampaigns] = useState<Campaign[]>([]);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showWithdrawHistory, setShowWithdrawHistory] = useState(false);
-  const [isBotAdded, setIsBotAdded] = useState(false);
+  const [, setIsBotAdded] = useState(false); // 只保留setter用于handleBotAdded函数
 
   useEffect(() => {
     fetchCampaigns();
@@ -35,12 +35,12 @@ export default function GroupOwnerDashboard() {
       .select('*, meme_tokens(symbol, logo_url)');
 
     if (data) {
-      const live = data.filter(c => c.status === 'live').map(c => ({
+      const live = data.filter((c: any) => c.status === 'live').map((c: any) => ({
         ...c,
         token_symbol: c.meme_tokens?.symbol || '',
         token_logo: c.meme_tokens?.logo_url || ''
       }));
-      const past = data.filter(c => c.status === 'past').map(c => ({
+      const past = data.filter((c: any) => c.status === 'past').map((c: any) => ({
         ...c,
         token_symbol: c.meme_tokens?.symbol || '',
         token_logo: c.meme_tokens?.logo_url || ''

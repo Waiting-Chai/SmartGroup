@@ -7,7 +7,7 @@ interface Community {
   name: string;
   avatar_url: string;
   owner_telegram_username: string;
-  owner_avatar_url: string;
+  owner_avatar_url: string; 
   win_rate_1h: number;
   mindshare: number;
   mindshare_change: number;
@@ -38,7 +38,7 @@ export default function CampaignDetail() {
       .limit(25);
 
     if (communityData) {
-      const enriched = communityData.map((c, i) => ({
+      const enriched = communityData.map((c: any, i: number) => ({
         ...c,
         mindshare: (100 - i * 2) / 100,
         mindshare_change: (Math.random() - 0.5) * 0.1
