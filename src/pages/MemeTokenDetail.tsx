@@ -30,6 +30,7 @@ interface MemeToken {
 
 export default function MemeTokenDetail() {
   const [token, setToken] = useState<MemeToken | null>(null);
+  const [loading, setLoading] = useState(true);
   // const [signals] = useState<Signal[]>([]); // 移除未使用的signals变量
   const [selectedTab, setSelectedTab] = useState<'signals' | 'holdings'>('signals');
   const [tradeTab, setTradeTab] = useState<'buy' | 'sell'>('buy');
@@ -39,20 +40,53 @@ export default function MemeTokenDetail() {
   const [isWalletConnected, setIsWalletConnected] = useState(false);
 
   const timeframes = ['1s', '5s', '30s', '1m', '3m', '5m', '15m', '30m', '1h', '2h', '4h', '6h', '8h', '12h', '1d', '3d', '1w', '1M'];
+  // Add display constants for icon and symbol
+  const DISPLAY_SYMBOL = 'PEPE';
+  const DISPLAY_LOGO_URL = '/token_icons/6d34d3d8ae908d910be991d7031f7a3f_v2l.webp';
 
   useEffect(() => {
     fetchTokenData();
   }, []);
 
   const fetchTokenData = async () => {
-    const { data: tokenData } = await supabase
-      .from('meme_tokens')
-      .select('*')
-      .limit(1)
-      .single();
+    setLoading(true);
 
-    if (tokenData) {
-      setToken(tokenData);
+    const fallbackToken: MemeToken = {
+      id: 'demo-pepe-1',
+      symbol: 'PEPE',
+      name: 'Pepe The Frog',
+      contract_address: '0x52b492a33e447cdb854c7fc19f1e57e8bfa1777d',
+      chain: 'base',
+      logo_url: 'https://cryptologos.cc/logos/pepe-pepe-logo.png',
+      description: 'Demo token for development preview when Supabase is not configured.',
+      market_cap: 12000000,
+      price: 0.000358,
+      liquidity: 2500000,
+      volume_24h: 530000,
+      volume_1h: 110000,
+      created_at: new Date().toISOString(),
+    };
+
+    try {
+      const { data: tokenData, error } = await supabase
+        .from('meme_tokens')
+        .select('*')
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.error('Error fetching token data:', error);
+        setToken(fallbackToken);
+      } else if (tokenData) {
+        setToken(tokenData);
+      } else {
+        setToken(fallbackToken);
+      }
+    } catch (error) {
+      console.error('An unexpected error occurred:', error);
+      setToken(fallbackToken);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -66,11 +100,17 @@ export default function MemeTokenDetail() {
     setIsWalletConnected(true);
   };
 
-  const mockAiSummary = "This Meme token shows strong community engagement with increasing trading volume over the past 24 hours. The price action indicates accumulation by larger holders, with multiple buy signals from top-performing communities. Technical indicators suggest potential upward momentum in the short term. Community sentiment is predominantly bullish, with active discussions centered around upcoming catalysts and partnership announcements.";
+  const mockAiSummary = "This Meme token shows strong community engagement with increasing trading volume over the past 24 hours. The price action indicates accumulation by larger holders, with multiple buy signals from top-performing Group. Technical indicators suggest potential upward momentum in the short term. Community sentiment is predominantly bullish, with active discussions centered around upcoming catalysts and partnership announcements.";
+
+  if (loading) {
+    return <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="text-white">Loading...</div>
+    </div>;
+  }
 
   if (!token) {
     return <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-      <div className="text-white">Loading...</div>
+      <div className="text-white">Failed to load token data. Please try again later.</div>
     </div>;
   }
 
@@ -81,10 +121,10 @@ export default function MemeTokenDetail() {
           <div className="xl:col-span-2 space-y-6">
             <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-6">
               <div className="flex items-start gap-4">
-                <img src={token.logo_url} alt={token.symbol} className="w-16 h-16 rounded-xl" />
+                <img src={DISPLAY_LOGO_URL} alt={DISPLAY_SYMBOL} className="w-16 h-16 rounded-xl" />
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-2xl font-bold text-white">{token.symbol}</h1>
+                    <h1 className="text-2xl font-bold text-white">{DISPLAY_SYMBOL}</h1>
                     <img
                       src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png"
                       alt="Base"
@@ -154,7 +194,7 @@ export default function MemeTokenDetail() {
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Community Signals
+                  Group Signals
                 </button>
                 <button
                   onClick={() => setSelectedTab('holdings')}
@@ -243,7 +283,7 @@ export default function MemeTokenDetail() {
                         <div className="grid grid-cols-5 gap-4 text-sm">
                           <div>
                             <div className="text-slate-400 mb-1">Balance</div>
-                            <div className="text-white font-medium">1,500,000 {token.symbol}</div>
+                            <div className="text-white font-medium">1,500,000 {DISPLAY_SYMBOL}</div>
                           </div>
                           <div>
                             <div className="text-slate-400 mb-1">Avg Price</div>
@@ -313,7 +353,7 @@ export default function MemeTokenDetail() {
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-sm text-slate-400 mb-2">
-                    <span>{tradeTab === 'buy' ? 'ETH' : token.symbol} Balance</span>
+                    <span>{tradeTab === 'buy' ? 'ETH' : DISPLAY_SYMBOL} Balance</span>
                     <span>{tradeTab === 'buy' ? '2.5 ETH' : '1,500,000'}</span>
                   </div>
 
@@ -373,7 +413,7 @@ export default function MemeTokenDetail() {
                   {!isWalletConnected
                     ? 'Connect Wallet'
                     : amount
-                    ? `${tradeTab === 'buy' ? 'Buy' : 'Sell'} ${amount} ${tradeTab === 'buy' ? 'ETH' : token.symbol}`
+                    ? `${tradeTab === 'buy' ? 'Buy' : 'Sell'} ${amount} ${tradeTab === 'buy' ? 'ETH' : DISPLAY_SYMBOL}`
                     : `Quick ${tradeTab === 'buy' ? 'Buy' : 'Sell'}`}
                 </button>
               </div>

@@ -81,7 +81,7 @@ function App() {
       <main>
         {currentPage === 'leaderboard' && <CommunityLeaderboard />}
         {currentPage === 'token' && <MemeTokenDetail />}
-        {currentPage === 'campaign' && <CampaignDetail />}
+        {currentPage === 'campaign' && <CampaignDetail onTradeNow={() => setCurrentPage('token')} />}
         {currentPage === 'dashboard' && <GroupOwnerDashboard />}
       </main>
     </div>
