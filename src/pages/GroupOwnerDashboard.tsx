@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, DollarSign, Users, Award, ChevronDown } from 'lucide-react';
+import { TrendingUp, DollarSign, Users, Award, ChevronDown, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface Campaign {
@@ -14,20 +14,33 @@ interface Campaign {
   token_logo: string;
 }
 
+interface TelegramUser {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username: string;
+  photo_url?: string;
+}
+
 export default function GroupOwnerDashboard() {
   const [activeTab, setActiveTab] = useState<'commission' | 'campaigns' | 'bot'>('campaigns');
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [selectedCommunity] = useState('币圈猎狗群'); // 移除未使用的setter
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [telegramUser, setTelegramUser] = useState<TelegramUser | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [selectedCommunity] = useState('币圈猎狗群');
   const [isWalletBound, setIsWalletBound] = useState(false);
   const [liveCampaigns, setLiveCampaigns] = useState<Campaign[]>([]);
   const [pastCampaigns, setPastCampaigns] = useState<Campaign[]>([]);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showWithdrawHistory, setShowWithdrawHistory] = useState(false);
-  const [, setIsBotAdded] = useState(false); // 只保留setter用于handleBotAdded函数
+  const [, setIsBotAdded] = useState(false);
+  const [isLoadingLogin, setIsLoadingLogin] = useState(false);
 
   useEffect(() => {
-    fetchCampaigns();
-  }, []);
+    if (isAuthenticated) {
+      fetchCampaigns();
+    }
+  }, [isAuthenticated]);
 
   const fetchCampaigns = async () => {
     const { data } = await supabase
@@ -50,8 +63,24 @@ export default function GroupOwnerDashboard() {
     }
   };
 
-  const handleTelegramLogin = () => {
-    setIsAuthenticated(true);
+  const handleTelegramLogin = async () => {
+    setIsLoggingIn(true);
+    
+    // 模拟登录过程
+    setTimeout(() => {
+      // Mock Telegram用户数据
+      const mockUser: TelegramUser = {
+        id: 123456789,
+        first_name: 'Shao',
+        last_name: 'Rockey',
+        username: 'shao_rockey',
+        photo_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=shao_rockey'
+      };
+      
+      setTelegramUser(mockUser);
+      setIsAuthenticated(true);
+      setIsLoggingIn(false);
+    }, 2000);
   };
 
   const handleBindWallet = () => {
@@ -62,24 +91,50 @@ export default function GroupOwnerDashboard() {
     setIsBotAdded(true);
   };
 
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setTelegramUser(null);
+    setIsWalletBound(false);
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center px-6">
         <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl p-12 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Users size={32} className="text-blue-400" />
-          </div>
-          <h1 className="text-3xl font-bold text-white mb-3">Welcome</h1>
-          <p className="text-slate-400 mb-8">Please log in with your Telegram account to access and manage your community dashboard.</p>
-          <button
-            onClick={handleTelegramLogin}
-            className="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-3"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-blue-500/25">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
               <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18.717-1.048 4.49-1.48 5.954-.184.621-.543.829-.891.85-.756.069-1.33-.5-2.063-.981-1.146-.754-1.793-1.222-2.905-1.957-1.286-.85-.453-1.318.28-2.081.192-.2 3.527-3.234 3.593-3.51.008-.034.016-.162-.061-.23-.077-.067-.19-.044-.272-.026-.116.026-1.968 1.25-5.554 3.67-.526.361-1.003.537-1.43.528-.471-.01-1.377-.266-2.051-.485-.825-.269-1.481-.411-1.424-.866.03-.237.354-.479.974-.726 3.818-1.664 6.364-2.764 7.636-3.302 3.638-1.516 4.395-1.78 4.891-1.788.108-.002.35.025.507.152.133.108.17.253.187.355.018.102.04.335.022.517z"/>
             </svg>
-            Login with Telegram
+          </div>
+          
+          <h1 className="text-3xl font-bold text-white mb-3">SmartGroup</h1>
+          <p className="text-slate-400 mb-8 leading-relaxed">
+            使用您的 Telegram 账户登录以访问和管理您的社区仪表板
+          </p>
+          
+          <button
+            onClick={handleTelegramLogin}
+            disabled={isLoggingIn}
+            className="w-full py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-blue-400 disabled:to-blue-500 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg shadow-blue-500/25 disabled:cursor-not-allowed"
+          >
+            {isLoggingIn ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                正在连接 Telegram...
+              </>
+            ) : (
+              <>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18.717-1.048 4.49-1.48 5.954-.184.621-.543.829-.891.85-.756.069-1.33-.5-2.063-.981-1.146-.754-1.793-1.222-2.905-1.957-1.286-.85-.453-1.318.28-2.081.192-.2 3.527-3.234 3.593-3.51.008-.034.016-.162-.061-.23-.077-.067-.19-.044-.272-.026-.116.026-1.968 1.25-5.554 3.67-.526.361-1.003.537-1.43.528-.471-.01-1.377-.266-2.051-.485-.825-.269-1.481-.411-1.424-.866.03-.237.354-.479.974-.726 3.818-1.664 6.364-2.764 7.636-3.302 3.638-1.516 4.395-1.78 4.891-1.788.108-.002.35.025.507.152.133.108.17.253.187.355.018.102.04.335.022.517z"/>
+                </svg>
+                使用 Telegram 登录
+              </>
+            )}
           </button>
+          
+          <div className="mt-6 text-xs text-slate-500 leading-relaxed">
+            点击"使用 Telegram 登录"即表示您同意我们的服务条款和隐私政策
+          </div>
         </div>
       </div>
     );
@@ -133,12 +188,21 @@ export default function GroupOwnerDashboard() {
                 </button>
               </div>
               <div className="flex items-center gap-4">
-                <img
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=user1"
-                  alt="User"
-                  className="w-10 h-10 rounded-full"
-                />
-                <span className="text-white font-medium">@cryptoking</span>
+                {telegramUser && (
+                  <>
+                    <img
+                      src={telegramUser.photo_url}
+                      alt={telegramUser.username}
+                      className="w-10 h-10 rounded-full border-2 border-blue-500/30"
+                    />
+                    <div className="text-right">
+                      <div className="text-white font-medium">
+                        {telegramUser.first_name} {telegramUser.last_name}
+                      </div>
+                      <div className="text-slate-400 text-sm">@{telegramUser.username}</div>
+                    </div>
+                  </>
+                )}
                 {isWalletBound ? (
                   <span className="text-slate-400 text-sm">0x1234...5678</span>
                 ) : (
@@ -146,9 +210,15 @@ export default function GroupOwnerDashboard() {
                     onClick={handleBindWallet}
                     className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
                   >
-                    Bind Wallet
+                    绑定钱包
                   </button>
                 )}
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-sm font-medium rounded-lg transition-colors border border-red-600/30"
+                >
+                  Logout
+                </button>
               </div>
             </div>
 
@@ -222,12 +292,19 @@ export default function GroupOwnerDashboard() {
                 </button>
               </div>
               <div className="flex items-center gap-4">
-                <img
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=user1"
-                  alt="User"
-                  className="w-10 h-10 rounded-full"
-                />
-                <span className="text-white font-medium">@cryptoking</span>
+                {telegramUser && (
+                  <>
+                    <img
+                      src={telegramUser.photo_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=guest'}
+                      alt={telegramUser.username}
+                      className="w-10 h-10 rounded-full border border-blue-500/40"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-white font-medium">{telegramUser.first_name} {telegramUser.last_name ?? ''}</span>
+                      <span className="text-slate-400 text-sm">@{telegramUser.username}</span>
+                    </div>
+                  </>
+                )}
                 {isWalletBound ? (
                   <span className="text-slate-400 text-sm">0x1234...5678</span>
                 ) : (
@@ -235,100 +312,74 @@ export default function GroupOwnerDashboard() {
                     onClick={handleBindWallet}
                     className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
                   >
-                    Bind Wallet
+                    绑定钱包
                   </button>
                 )}
+                <button
+                  onClick={handleLogout}
+                  className="px-2 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-lg transition-colors flex items-center gap-1"
+                  title="退出登录"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-6">
+              <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-slate-400 text-sm font-medium">Unclaimed Rewards (USD)</h3>
+                  <Award className="text-purple-400" size={24} />
+                </div>
+                <div className="text-3xl font-bold text-white mb-4">$1,864.50</div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowWithdrawModal(true)}
+                    className="py-2 px-6 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    Withdraw
+                  </button>
+                  <button
+                    onClick={() => setShowWithdrawHistory(true)}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg transition-colors"
+                  >
+                    History
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-slate-400 text-sm font-medium">Total Trading Volume</h3>
+                  <TrendingUp className="text-blue-400" size={24} />
+                </div>
+                <div className="text-3xl font-bold text-white mb-2">$75,920.00</div>
+                <div className="text-sm text-slate-400">Traders: 15 / 1,000</div>
+              </div>
+
+              <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-slate-400 text-sm font-medium">Signal Win Rate</h3>
+                    <select className="bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded px-2 py-1">
+                      <option>1h</option>
+                      <option>6h</option>
+                      <option>24h</option>
+                      <option>7d</option>
+                      <option>30d</option>
+                    </select>
+                  </div>
+                  <Award className="text-purple-400" size={24} />
+                </div>
+                <div className="text-3xl font-bold text-white mb-2">69.3%</div>
+                <div className="text-sm text-slate-400">Based on 85 signals</div>
               </div>
             </div>
 
             <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-slate-400 text-sm font-medium">Unclaimed Rewards (USD)</h3>
-                <Award className="text-purple-400" size={24} />
-              </div>
-              <div className="text-3xl font-bold text-white mb-4">$1,864.50</div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowWithdrawModal(true)}
-                  className="py-2 px-6 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
-                >
-                  Withdraw
-                </button>
-                <button
-                  onClick={() => setShowWithdrawHistory(true)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg transition-colors"
-                >
-                  History
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-4">Live Campaigns</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {liveCampaigns.length > 0 ? liveCampaigns.map((campaign) => (
-                  <div key={campaign.id} className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-6 hover:border-emerald-500 transition-colors">
-                    <div className="flex items-center gap-3 mb-4">
-                      <img src={campaign.token_logo} alt={campaign.token_symbol} className="w-12 h-12 rounded-xl" />
-                      <div>
-                        <h3 className="text-lg font-bold text-white">{campaign.token_symbol}</h3>
-                        <span className="text-xs px-2 py-1 bg-red-500/20 text-red-400 rounded-full border border-red-500/50">LIVE</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-slate-400 mb-4">{campaign.description}</p>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-400">Prize Pool:</span>
-                        <span className="text-emerald-400 font-medium">${campaign.prize_pool.toLocaleString()} USDT</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-400">Start:</span>
-                        <span className="text-white">{new Date(campaign.start_date).toLocaleDateString()}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-400">End:</span>
-                        <span className="text-white">{new Date(campaign.end_date).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors">
-                        View
-                      </button>
-                      <button className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors">
-                        Register
-                      </button>
-                    </div>
-                  </div>
-                )) : (
-                  <div className="col-span-3 text-center py-12 text-slate-400">
-                    No live campaigns available
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-4">Past Campaigns</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {pastCampaigns.length > 0 ? pastCampaigns.map((campaign) => (
-                  <div key={campaign.id} className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-6 opacity-75">
-                    <div className="flex items-center gap-3 mb-4">
-                      <img src={campaign.token_logo} alt={campaign.token_symbol} className="w-12 h-12 rounded-xl" />
-                      <div>
-                        <h3 className="text-lg font-bold text-white">{campaign.token_symbol}</h3>
-                        <span className="text-xs px-2 py-1 bg-slate-700 text-slate-400 rounded-full">ENDED</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-slate-400 mb-4">{campaign.description}</p>
-                    <button className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors">
-                      View Results
-                    </button>
-                  </div>
-                )) : (
-                  <div className="col-span-3 text-center py-12 text-slate-400">
-                    No past campaigns
-                  </div>
-                )}
+              <h3 className="text-lg font-bold text-white mb-6">Commission & Signal Trends</h3>
+              <div className="h-[400px] flex items-center justify-center text-slate-500">
+                <TrendingUp size={48} className="opacity-20" />
               </div>
             </div>
           </div>
