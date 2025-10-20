@@ -4,6 +4,7 @@ import CommunityLeaderboard from './pages/CommunityLeaderboard';
 import MemeTokenDetail from './pages/MemeTokenDetail';
 import GroupOwnerDashboard from './pages/GroupOwnerDashboard';
 import CampaignDetail from './pages/CampaignDetail';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 type Page = 'home' | 'leaderboard' | 'token' | 'campaign' | 'dashboard';
 
@@ -71,9 +72,8 @@ function App() {
               </div>
             </div>
 
-            <button className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors">
-              Connect Wallet
-            </button>
+            {/* Replace plain button with RainbowKit ConnectButton */}
+            <ConnectButton />
           </div>
         </div>
       </nav>
